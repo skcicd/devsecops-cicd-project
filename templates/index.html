@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Cool CICD</title>
+</head>
+<body>
+    <h1>Find out the weather in any city</h1>
+    <form method="post">
+        <input type="text" name="city" placeholder="Enter city" required>
+        <button type="submit">Сheck the weather</button>
+    </form>
+
+    {% if weather_data %}
+        {% if weather_data.error %}
+            <p>{{ weather_data.error }}</p>
+        {% else %}
+            <h2>Weather in {{ weather_data['name'] }}</h2>
+            <p>Temperature: {{ weather_data['main']['temp'] }} °C</p>
+             <!--   <p>Feels like: {{ weather_data['main']['feels_like'] }} °C</p>
+            <p>Description: {{ weather_data['weather'][0]['description'] }}</p>
+            <p>Humidity: {{ weather_data['main']['humidity'] }} %</p>
+            <p>Pressure: {{ weather_data['main']['pressure'] }} gPa</p> -->
+        {% endif %}
+    {% endif %}
+</body>
+</html>
