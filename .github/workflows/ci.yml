@@ -1,6 +1,42 @@
 # .github/workflows/ci.yml
 name: CI Pipeline
 
+on:                              # Trigger Points:
+  push:                          # Activates on pushes to main branch    
+    branches: [ main ]
+  pull_request:                  # Triggers on pull requests to main branch
+    branches: [ main ]
+
+jobs:
+  test:                          # Test Job
+    runs-on: ubuntu-latest       # Runs on latest Ubuntu
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'     # Sets up Python 3.9
+    
+    - name: Install dependencies  # Installs project dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: pytest tests/           # Executes pytest
+    
+  build:                           # Build Job
+    needs: test                    # Depends on test job passing
+    runs-on: ubuntu-latest         # Builds Docker image
+    
+    steps:                         # Prepares application for deployment
+    - uses: actions/checkout@v3
+    - name: Build Docker image
+      run: docker build -t flask-app 
+---
+name: CI/CD Security Pipeline
+
 on:
   push:
     branches: [ main ]
@@ -8,29 +44,22 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  security-scan:
     runs-on: ubuntu-latest
-    
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.9'
     
-    - name: Install dependencies
+    - name: Run Bandit
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install bandit
+        bandit -r ./src
     
-    - name: Run tests
-      run: pytest tests/
+    - name: Check Dependencies
+      run: |
+        pip install safety
+        safety check
     
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    - name: Build Docker image
-      run: docker build -t flask-app .
+    - name: Scan Docker Image
+      uses: anchore/scan-action@v3
+      with:
+        image: "flask-app:latest"
